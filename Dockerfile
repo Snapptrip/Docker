@@ -50,7 +50,11 @@ RUN apk add --no-cache --update \
     php7-zlib \
     php7-tokenizer \
     wget sqlite git curl bash grep \
-    supervisor
+    supervisor tzdata
+
+RUN rm /etc/localtime
+RUN ln -s /usr/share/zoneinfo/Asia/Tehran /etc/localtime
+RUN echo 'Asia/Tehran' > /etc/timezone
 
 # forward request and error logs to docker log collector
 RUN ln -sf /dev/stdout /var/log/nginx/access.log && \
@@ -77,15 +81,23 @@ RUN wget https://getcomposer.org/installer -O /tmp/composer-setup.php && \
     php -r "unlink('/tmp/composer-setup.php');"
 
 WORKDIR /var/www/html/
+
 USER 1001
 
 RUN wget ${archive_url} && \
     tar xzf ${cachet_ver}.tar.gz --strip-components=1 && \
     chown -R www-data:root /var/www/html && \
     rm -r ${cachet_ver}.tar.gz && \
-    php /bin/composer.phar global require "hirak/prestissimo:^0.3" && \
+    php /bin/composer.phar global require "hirak/prestissimo:^0.3" "laravel-notification-channels/webhook" && \
     php /bin/composer.phar install -o && \
     rm -rf bootstrap/cache/*
+
+#COPY Cachet .
+#RUN chown -R www-data:root /var/www/html/public/
+#RUN chown -R www-data:root /var/www/html/storage/
+#RUN chown -R www-data:root /var/www/html/bootstrap/
+#RUN chown -R www-data:root /var/www/html/config/
+#USER 1001
 
 COPY conf/php-fpm-pool.conf /etc/php7/php-fpm.d/www.conf
 COPY conf/supervisord.conf /etc/supervisor/supervisord.conf
@@ -96,5 +108,5 @@ COPY entrypoint.sh /sbin/entrypoint.sh
 
 USER root
 RUN chmod g+rwx /var/run/nginx.pid && \
-    chmod -R g+rw /var/www /usr/share/nginx/cache /var/cache/nginx /var/lib/nginx/ /etc/php7/php-fpm.d storage
+    chmod -R g+rw /var/www/html/public /var/www/html/storage /var/www/html/config/ /var/www/html/bootstrap/ /usr/share/nginx/cache /var/cache/nginx /var/lib/nginx/ /etc/php7/php-fpm.d storage
 USER 1001

@@ -133,7 +133,7 @@ initialize_system() {
   NEXMO_SMS_FROM=${NEXMO_SMS_FROM:-Cachet}
 
   PHP_MAX_CHILDREN=${PHP_MAX_CHILDREN:-5}
-  
+
   TRUSTED_PROXIES=${TRUSTED_PROXIES:-}
 
   # configure env file
@@ -184,9 +184,9 @@ initialize_system() {
   sed 's,{{NEXMO_SMS_FROM}},'"${NEXMO_SMS_FROM}"',g' -i /var/www/html/.env
 
   sed 's,{{PHP_MAX_CHILDREN}},'"${PHP_MAX_CHILDREN}"',g' -i /etc/php7/php-fpm.d/www.conf
-  
+
   sed 's,{{TRUSTED_PROXIES}},'"${TRUSTED_PROXIES}"',g' -i /var/www/html/.env
-  
+
   if [[ -z "${APP_KEY}" || "${APP_KEY}" = "null" ]]; then
     keygen="$(php artisan key:generate)"
     APP_KEY=$(echo "${keygen}" | grep -oP '(?<=\[).*(?=\])')
